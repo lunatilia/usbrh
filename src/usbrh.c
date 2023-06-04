@@ -24,10 +24,14 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0)
 #define HAVE_PROC_OPS
 #endif
+/* Temporarily adapt to Kernel 5.18 and later by changing `PDE_DATA` to `pde_data`. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
+#define PDE_DATA pde_data
+#endif
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("USBRH driver");
-MODULE_VERSION("0.1.0");
+MODULE_VERSION("0.1.1");
 MODULE_AUTHOR("Tetsuya Kimata, kimata@green-rabbit.net");
 
 #define USBRH_NAME              "usbrh"
@@ -304,7 +308,7 @@ static ssize_t usbrh_proc_stat_read(struct file *file,
     }
 
     len = 0;
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
 
     if (usbrh_read_sensor(dev, &value)) {
         len += snprintf(buf, count, "Failed to get temperature/humierature\n");
@@ -333,7 +337,7 @@ static ssize_t usbrh_proc_temp_read(struct file *file,
     }
 
     len = 0;
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
 
     if (usbrh_read_sensor(dev, &value)) {
         len += snprintf(buf, count, "Failed to get temperature\n");
@@ -358,7 +362,7 @@ static ssize_t usbrh_proc_humi_read(struct file *file,
         return 0;
     }
 
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
     if (usbrh_read_sensor(dev, &value)) {
         return snprintf(buf, count, "Failed to get humidity\n");
     }
@@ -381,7 +385,7 @@ static ssize_t usbrh_proc_led_read(struct file *file,
         return 0;
     }
 
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
     len = snprintf(buf, count, "%d\n", dev->led);
     *off += len;
 
@@ -398,7 +402,7 @@ static ssize_t usbrh_proc_led_write(struct file *file,
         return 0;
     }
 
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
     dev->led = (buf[0] - '0') & 0x3;
 
     usbrh_control_led(dev, 0, (dev->led >> 0) & 0x1);
@@ -418,7 +422,7 @@ static ssize_t usbrh_proc_heater_read(struct file *file,
         return 0;
     }
 
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
     len = snprintf(buf, count, "%d\n", dev->heater);
     *off += len;
 
@@ -435,7 +439,7 @@ static ssize_t usbrh_proc_heater_write(struct file *file,
         return 0;
     }
 
-    dev = (struct usbrh *)pde_data(file_inode(file));
+    dev = (struct usbrh *)PDE_DATA(file_inode(file));
     dev->heater = (buf[0] - '0') & 0x1;
 
     usbrh_control_heater(dev, dev->heater);
